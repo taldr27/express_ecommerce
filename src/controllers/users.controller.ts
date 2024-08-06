@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
-import {
-  CreateUserSchema,
-  LoginSchema,
-  UpdateUserSchema,
-} from "../schemas/users.schema";
+import { CreateUserSchema, UpdateUserSchema } from "../schemas/users.schema";
 import bcrypt from "bcrypt";
 import { ZodError } from "zod";
+import {
+  IErrorResponse,
+  TCreateUserResponse,
+  TGetUserByIdResponse,
+} from "../types";
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany();
 
@@ -20,7 +21,10 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (
+  req: Request,
+  res: Response<TCreateUserResponse | IErrorResponse>
+) => {
   try {
     const { body } = req;
     const validatedBody = CreateUserSchema.parse(body);
@@ -55,13 +59,21 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserById = async (
+  req: Request,
+  res: Response<TGetUserByIdResponse | IErrorResponse>
+) => {
   try {
     const { userId } = req.params;
 
     const user = await prisma.user.findUnique({
       where: {
         id: parseInt(userId),
+      },
+      select: {
+        id: true,
+        name: true,
+        password: true,
       },
     });
 
@@ -79,7 +91,10 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (
+  req: Request,
+  res: Response<TCreateUserResponse | IErrorResponse>
+) => {
   try {
     const { userId } = req.params;
     const { body } = req;
